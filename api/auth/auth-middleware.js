@@ -20,8 +20,18 @@ function restricted(req, res, next) {
     "message": "Username taken"
   }
 */
-function checkUsernameFree(req, res, next) {
-  next();
+async function checkUsernameFree(req, res, next) {
+  const { username } = req.body;
+  try {
+    const [doesUserNameExist] = await User.findBy(username);
+    if (doesUserNameExist) {
+      next({ status: 422, message: "Username taken" });
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
+  }
 }
 
 /*
@@ -32,7 +42,19 @@ function checkUsernameFree(req, res, next) {
     "message": "Invalid credentials"
   }
 */
-function checkUsernameExists() {}
+async function checkUsernameExists(req, res, next) {
+  const { username } = req.body;
+  try {
+    const [doesUserNameExist] = await User.findBy(username);
+    if (!doesUserNameExist) {
+      next({ status: 401, message: "Invalid credentials" });
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
+  }
+}
 
 /*
   If password is missing from req.body, or if it's 3 chars or shorter
@@ -42,11 +64,20 @@ function checkUsernameExists() {}
     "message": "Password must be longer than 3 chars"
   }
 */
-function checkPasswordLength() {}
+function checkPasswordLength(req, res, next) {
+  const { password } = req.body;
+  if (password.trim().length <= 3) {
+    next({ message: "Password must be longer than 3 chars" });
+  } else {
+    next();
+  }
+}
 
 // Don't forget to add these to the `exports` object so they can be required in other modules
 
 module.exports = {
   restricted,
   checkUsernameFree,
+  checkPasswordLength,
+  checkUsernameExists,
 };

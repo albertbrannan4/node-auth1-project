@@ -3,7 +3,11 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const User = require("../users/users-model");
-const { checkUsernameFree } = require("./auth-middleware");
+const {
+  checkUsernameFree,
+  checkPasswordLength,
+  checkUsernameExists,
+} = require("./auth-middleware");
 
 /**
   1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
@@ -27,17 +31,22 @@ const { checkUsernameFree } = require("./auth-middleware");
     "message": "Password must be longer than 3 chars"
   }
  */
-router.post("/register", checkUsernameFree, async (req, res, next) => {
-  const { username, password } = req.body;
-  try {
-    const hash = bcrypt.hashSync(password, 10);
-    const newUser = { username, password: hash };
-    const result = await User.add(newUser);
-    res.status(200).json(result);
-  } catch (err) {
-    next();
+router.post(
+  "/register",
+  checkPasswordLength,
+  checkUsernameFree,
+  async (req, res, next) => {
+    const { username, password } = req.body;
+    try {
+      const hash = bcrypt.hashSync(password, 10);
+      const newUser = { username, password: hash };
+      const result = await User.add(newUser);
+      res.status(200).json(result);
+    } catch (err) {
+      next();
+    }
   }
-});
+);
 
 /**
   2 [POST] /api/auth/login { "username": "sue", "password": "1234" }
@@ -55,7 +64,7 @@ router.post("/register", checkUsernameFree, async (req, res, next) => {
   }
  */
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", checkUsernameExists, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const [user] = await User.findBy({ username });
