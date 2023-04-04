@@ -9,6 +9,7 @@ const User = require("../users/users-model");
   }
 */
 function restricted(req, res, next) {
+  console.log(req.session.user);
   next();
 }
 
