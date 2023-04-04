@@ -23,13 +23,17 @@ const Users = require("./users-model");
     "message": "You shall not pass!"
   }
  */
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const allUsers = await Users.find();
     res.json(allUsers);
   } catch (err) {
-    res.status(500).json({ message: "didnt get users" });
+    next({
+      status: 500,
+      message: "there is something wrong with the users server",
+    });
   }
 });
+
 // Don't forget to add the router to the `exports` object so it can be required in other modules
 module.exports = router;
